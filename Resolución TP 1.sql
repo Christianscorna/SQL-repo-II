@@ -69,3 +69,36 @@ GROUP BY id_coordinador, id_institucion
 HAVING COUNT(nro_voluntario) > 3
 ORDER BY id_institucion DESC;
 -- Se puede leer como "El coordinador 108, en la institucion 100 tiene 5 voluntarios a su cargo"
+
+-- Consultas sobre más de una tabla (esquema películas)
+
+-- Consultas para resolver mediante ensamble/s (NATURAL/INNER/OUTER JOIN). 
+
+-- 11. Muestre los ids, nombres y apellidos de los empleados que no poseen jefe. Incluya también el nombre de la tarea que cada uno realiza, verificando que el sueldo máximo de la misma sea superior a 14800.
+SELECT e.id_empleado, e.nombre, e.apellido, t.nombre_tarea, t.sueldo_maximo
+FROM empleado e 
+JOIN tarea t ON e.id_tarea = t.id_tarea
+WHERE e.id_jefe IS NULL AND 
+        t.sueldo_maximo > 14800;
+
+-- 12. Determine si hay empleados que reciben un sueldo superior al de sus respectivos jefes.
+SELECT e.nombre || ', ' || e.apellido AS datos_empleado,
+       e.sueldo AS sueldo_empleado,
+       j.nombre || ', ' || j.apellido AS datos_jefe,
+       j.sueldo AS sueldo_jefe
+FROM empleado e 
+JOIN empleado j ON e.id_jefe = j.id_empleado
+WHERE e.sueldo > j.sueldo;
+
+SELECT di.id_distribuidor, di.nombre, di.tipo, COUNT(DISTINCT p.titulo)
+FROM distribuidor di 
+JOIN entrega en ON (di.id_distribuidor = en.id_distribuidor)
+JOIN renglon_entrega re ON (en.nro_entrega = re.nro_entrega)
+JOIN pelicula p ON (re.codigo_pelicula = re.codigo_pelicula)
+WHERE (p.idioma LIKE 'Español') AND (EXTRACT(year from en.fecha_entrega) > 2010)
+GROUP BY di.id_distribuidor
+
+
+
+
+
