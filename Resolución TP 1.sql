@@ -90,6 +90,7 @@ FROM empleado e
 JOIN empleado j ON e.id_jefe = j.id_empleado
 WHERE e.sueldo > j.sueldo;
 
+-- 13. Liste el identificador, nombre y tipo de los distribuidores que hayan entregado películas en idioma Español luego del año 2010. Incluya en cada caso la cantidad de películas distintas entregadas
 SELECT di.id_distribuidor, di.nombre, di.tipo, COUNT(DISTINCT p.titulo)
 FROM distribuidor di 
 JOIN entrega en ON (di.id_distribuidor = en.id_distribuidor)
@@ -97,8 +98,3 @@ JOIN renglon_entrega re ON (en.nro_entrega = re.nro_entrega)
 JOIN pelicula p ON (re.codigo_pelicula = re.codigo_pelicula)
 WHERE (p.idioma LIKE 'Español') AND (EXTRACT(year from en.fecha_entrega) > 2010)
 GROUP BY di.id_distribuidor
-
-
-
-
-
