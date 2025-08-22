@@ -98,3 +98,108 @@ JOIN renglon_entrega re ON (en.nro_entrega = re.nro_entrega)
 JOIN pelicula p ON (re.codigo_pelicula = re.codigo_pelicula)
 WHERE (p.idioma LIKE 'Español') AND (EXTRACT(year from en.fecha_entrega) > 2010)
 GROUP BY di.id_distribuidor
+
+-- 14. Para cada uno de los empleados registrados en la base, liste su apellido junto con el apellido de su jefe, en caso de tenerlo, sino incluya la expresión ‘(no posee)’. Ordene el resultado por el apellido del empleado.
+SELECT e.apellido AS apellido_empleado, COALESCE(j.apellido, '(No posee)') AS apellido_jefe
+FROM empleado e 
+JOIN empleado j ON e.id_jefe = j.id_empleado
+WHERE e.id_jefe IS NOT NULL
+ORDER BY e.apellido;
+
+-- 15. Liste el id y nombre de todos los distribuidores existentes junto con la cantidad de videos a los que han realizado entregas. Ordene el resultado por dicha cantidad en forma descendente.
+SELECT di.id_distribuidor, di.nombre, COUNT(v.id_video) AS cantidad_videos
+FROM distribuidor di
+LEFT JOIN entrega en ON di.id_distribuidor = en.id_distribuidor
+LEFT JOIN video v ON en.id_video = v.id_video 
+GROUP BY di.id_distribuidor, di.nombre
+ORDER BY cantidad_videos;
+
+-- Consultas para resolver con subconsultas (IN, NOT IN, EXISTS, NOT EXISTS).
+
+-- 16. Liste los datos de las películas que nunca han sido entregadas por un distribuidor nacional.
+SELECT p.codigo_pelicula, p.titulo, p.idioma, p.genero
+FROM pelicula p
+WHERE p.codigo_pelicula NOT IN (
+    SELECT re.codigo_pelicula
+    FROM renglon_entrega re
+    WHERE re.nro_entrega IN (
+        SELECT en.nro_entrega
+        FROM entrega en  
+        WHERE en.id_distribuidor IN (
+            SELECT di.id_distribuidor
+            FROM distribuidor di 
+            WHERE di.tipo = 'N'
+        )
+    )
+);
+
+-- 17. Indicar los departamentos (nombre e identificador completo) que tienen más de 3 empleados realizando tareas de sueldo mínimo inferior a 6000. Mostrar el resultado ordenado por el id de departamento.
+SELECT d.id_departamento, d.id_distribuidor, d.nombre_departamento
+FROM departamento d 
+WHERE (d.id_departamento, d.id_distribuidor) IN (
+    SELECT e.id_departamento, e.id_distribuidor
+    FROM empleado e
+    JOIN tarea t ON (e.id_tarea = t.id_tarea)
+    WHERE t.sueldo_minimo < 6000
+    GROUP BY e.id_departamento, e.id_distribuidor
+    HAVING COUNT(e.id_empleado) > 3;
+)
+ORDER BY d.id_departamento;
+
+-- 18. Liste los datos de los Departamentos en los que trabajan menos del 10 % de los empleados registrados.
+
+-- Interpretación de resultados donde intervienen valores nulos
+
+-- 25. Analice los resultados de los siguientes grupos de consultas:
+
+-- a
+
+-- a.1
+SELECT avg(porcentaje), count(porcentaje), count(*)
+FROM voluntario;
+-- Cuenta el promedio de porcentaje, cuenta la cantidad de porcentajes y todas las filas. 
+
+-- a.2
+SELECT avg(porcentaje), count(porcentaje), count(*)
+FROM voluntario WHERE porcentaje IS NOT NULL;
+-- Hace lo mismo que en la consulta anterior pero no cuenta los valores nulos
+
+-- a.3
+SELECT avg(porcentaje), count(porcentaje), count(*)
+FROM voluntario WHERE porcentaje IS NULL;
+-- Toma promedio, cantidad de porcentajes y cantidad de filas de porcentajes nulos
+
+-- b 
+
+--b.1
+SELECT * FROM voluntario
+WHERE nro_voluntario NOT IN (
+    SELECT id_director 
+    FROM institucion
+);
+-- Se trae todos los voluntarios que no son directores de instituciones
+
+-- b.2
+SELECT * FROM voluntario
+WHERE nro_voluntario NOT IN (
+    SELECT id_director 
+    FROM institucion
+    WHERE id_director IS NOT NULL
+);
+-- Se trae todos aquellos voluntarios que no son directores, considerando nulos. No surte efecto que considere valores nulos ya que la subconsulta no devuelve los valores nulos
+
+-- c
+
+-- c.1 
+SELECT i.id_institucion, count(*)
+FROM institucion i 
+LEFT JOIN voluntario v ON (i.id_institucion = v.id_institucion)
+GROUP BY i.id_institucion;
+-- Cuenta la cantidad de voluntarios que trabajaron para cada institucion
+
+-- c.2
+SELECT v.id_institucion, count(*)
+FROM institucion i 
+LEFT JOIN voluntario v ON (i.id_institucion = v.id_institucion)
+GROUP BY v.id_institucion;
+-- Devuelve los id de institucion asignadas a los voluntarios. 
