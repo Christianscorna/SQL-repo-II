@@ -148,6 +148,62 @@ ORDER BY d.id_departamento;
 
 -- 18. Liste los datos de los Departamentos en los que trabajan menos del 10 % de los empleados registrados.
 
+-- Consultas para resolver con operadores de conjuntos (o simulando la operación)
+
+-- 21. Encuentre los id de distribuidor correspondientes a distribuidores que no han realizado entregas
+SELECT id_distribuidor
+FROM distribuidor
+
+EXCEPT
+
+SELECT id_distribuidor
+FROM entrega;
+
+-- 22. Verifique si hay empleados que son jefes de otro/s empleado/s y que además son jefes de algún departamento.
+SELECT id_empleado
+FROM empleado
+
+INTERSECT
+
+SELECT id_jefe
+FROM empleado 
+
+INTERSECT
+
+SELECT jefe_departamento
+FROM departamento
+
+-- 23.  Liste los datos personales de todos los distribuidores (nacionales e internacionales) junto con el encargado, para el caso de distribuidores nacionales
+SELECT id_distribuidor, nro_inscripcion, encargado
+FROM nacional
+
+UNION
+
+SELECT id_distribuidor, nro_inscripcion, encargado -- No da error, crea la columna y la arroja vacia
+FROM internacional
+
+-- Otra solución:
+SELECT d.id_distribuidor, d.nombre, d.direccion, d.telefono, na.encargado 
+FROM distribuidor d 
+JOIN nacional na ON d.id_distribuidor = na.id_distribuidor
+WHERE d.tipo = 'N'
+
+UNION
+
+SELECT d.id_distribuidor, d.nombre, d.direccion, d.telefono, na.encargado 
+FROM distribuidor d
+JOIN nacional na ON d.id_distribuidor = na.id_distribuidor
+WHERE d.tipo = 'I'
+
+-- 24. Determine si hay películas que han sido entregadas a todos los videos. En ese caso, liste sus datos completos.
+SELECT codigo_pelicula, titulo, idioma, genero 
+FROM pelicula 
+
+INTERSECT 
+
+SELECT codigo_pelicula, titulo, idioma, genero 
+FROM entrega 
+
 -- Interpretación de resultados donde intervienen valores nulos
 
 -- 25. Analice los resultados de los siguientes grupos de consultas:
